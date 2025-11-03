@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: magic-bg-remover
+    env: python
+    build:
+      dockerfile: Dockerfile
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.9.0
+    plan: free
+    numInstances: 1
+    healthCheckPath: /

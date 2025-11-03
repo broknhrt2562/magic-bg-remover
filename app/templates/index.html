@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Background Remover | Free Online Tool</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-magic"></i>
+                <h1>Magic BG Remover</h1>
+            </div>
+            <p class="tagline">Remove backgrounds from your images in seconds. 100% free and easy to use!</p>
+            <p class="tagline" style="color: #4CAF50; font-weight: 500; margin-top: 0.5rem;">
+                <i class="fas fa-check-circle"></i> No login required & completely free to use!
+            </p>
+        </header>
+        
+        <main class="main-content">
+            <form id="uploadForm" method="POST" enctype="multipart/form-data" action="/api/remove-bg">
+                <div class="upload-card" id="dropArea">
+                    <div class="upload-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>Drop your image here</h3>
+                    <p class="upload-hint">or click to browse files</p>
+                    <p class="file-types">Supports: JPG, PNG, WEBP (Max 10MB)</p>
+                    <input type="file" id="fileInput" name="file" accept="image/*" required>
+                    <div class="file-info" id="fileInfo"></div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button type="submit" id="uploadButton" class="btn btn-primary" disabled>
+                        <i class="fas fa-wand-magic-sparkles"></i> Remove Background
+                    </button>
+                </div>
+            </form>
+
+            <div id="result" class="result-container">
+                <div class="result-header">
+                    <h2>Your Result</h2>
+                    <div class="divider"></div>
+                </div>
+                <div class="image-preview">
+                    <div class="image-container">
+                        <img id="resultImage" src="" alt="Processed image">
+                        <div class="loading-overlay" id="loadingOverlay">
+                            <div class="spinner"></div>
+                            <p>Removing background...</p>
+                        </div>
+                    </div>
+                    <a id="downloadLink" href="#" class="btn btn-download" download>
+                        <i class="fas fa-download"></i> Download Image
+                    </a>
+                </div>
+            </div>
+        </main>
+        
+        <footer class="footer">
+            <p>Made with <i class="fas fa-heart"></i> | Free to use for everyone</p>
+        </footer>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // DOM Elements
+        const dropArea = document.getElementById('dropArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const resultDiv = document.getElementById('result');
+        const resultImage = document.getElementById('resultImage');
+        const downloadLink = document.getElementById('downloadLink');
+        const fileInfo = document.getElementById('fileInfo');
+        const uploadButton = document.getElementById('uploadButton');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, preventDefaults, false);
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        // Highlight drop area when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.add('highlight');
+            }, false);
+        });
+
+        // Remove highlight when item leaves drop area
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropArea.addEventListener(eventName, () => {
+                dropArea.classList.remove('highlight');
+            }, false);
+        });
+
+        // Handle dropped files
+        dropArea.addEventListener('drop', handleDrop, false);
+
+        // Handle file selection via click
+        fileInput.addEventListener('change', function() {
+            if (this.files.length > 0) {
+                updateFileInfo(this.files[0]);
+            }
+        });
+
+        // Form submission
+        uploadForm.addEventListener('submit', handleFormSubmit);
+
+        // Helper functions
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length) {
+                fileInput.files = files;
+                updateFileInfo(files[0]);
+            }
+        }
+
+        function updateFileInfo(file) {
+            // Enable upload button
+            uploadButton.disabled = false;
+            
+            // Update file info display
+            const fileSize = (file.size / (1024 * 1024)).toFixed(2); // Convert to MB
+            fileInfo.innerHTML = `
+                <div class="file-details">
+                    <i class="fas fa-file-image"></i>
+                    <div class="file-meta">
+                        <span class="file-name">${file.name}</span>
+                        <span class="file-size">${fileSize} MB</span>
+                    </div>
+                    <button type="button" class="btn-remove" id="removeFile">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Add event listener to remove file button
+            document.getElementById('removeFile').addEventListener('click', resetFileInput);
+            
+            // Show preview if it's an image
+            if (file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    // You could show a preview here if needed
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+        
+        function resetFileInput() {
+            fileInput.value = '';
+            fileInfo.innerHTML = '';
+            uploadButton.disabled = true;
+        }
+
+        async function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            if (!fileInput.files.length) {
+                showNotification('Please select an image first', 'error');
+                return;
+            }
+            
+            const formData = new FormData(uploadForm);
+            
+            try {
+                // Show loading state
+                loadingOverlay.style.display = 'flex';
+                resultDiv.style.display = 'none';
+                
+                const response = await fetch('/api/remove-bg', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    // Show result
+                    resultImage.src = data.processed_url + '?t=' + new Date().getTime();
+                    downloadLink.href = data.processed_url;
+                    downloadLink.download = data.filename;
+                    resultDiv.style.display = 'block';
+                    
+                    // Smooth scroll to result
+                    resultDiv.scrollIntoView({ behavior: 'smooth' });
+                } else {
+                    throw new Error(data.error || 'Failed to process image');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                showNotification(error.message || 'An error occurred. Please try again.', 'error');
+            } finally {
+                loadingOverlay.style.display = 'none';
+            }
+        }
+        
+        function showNotification(message, type = 'success') {
+            const notification = document.createElement('div');
+            notification.classList.add('notification', type);
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
