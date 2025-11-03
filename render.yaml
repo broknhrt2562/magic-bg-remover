@@ -18,12 +18,12 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
     startCommand: >
-      gunicorn --bind :10000 
+      /usr/local/bin/gunicorn --bind :10000 
       --timeout 120 
       --workers 4 
       --worker-class gthread 
       --threads 2 
-      --log-level=info 
+      --log-level info 
       --access-logfile - 
       --error-logfile - 
       app.main:app

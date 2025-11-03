@@ -13,7 +13,11 @@ ENV PYTHONUNBUFFERED=1 \
 RUN apt-get update && apt-get install -y --no-install-recommends \
     gcc \
     python3-dev \
+    python3-pip \
     && rm -rf /var/lib/apt/lists/*
+
+# Install Gunicorn at system level
+RUN pip3 install --no-cache-dir gunicorn==20.1.0
 
 # Copy requirements first to leverage Docker cache
 COPY requirements.txt .
