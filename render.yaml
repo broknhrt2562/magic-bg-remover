@@ -18,7 +18,7 @@ services:
       pip install --upgrade pip
       pip install -r requirements.txt
     startCommand: >
-      /usr/local/bin/gunicorn --bind :10000 
+      python -m gunicorn --bind :10000 
       --timeout 120 
       --workers 4 
       --worker-class gthread 
