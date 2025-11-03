@@ -9,10 +9,21 @@ services:
         value: 3.9.0
       - key: FLASK_ENV
         value: production
+      - key: FLASK_APP
+        value: app/main.py
     plan: free
     numInstances: 1
     healthCheckPath: /
     buildCommand: |
-      pip install --upgrade pip &&
+      pip install --upgrade pip
       pip install -r requirements.txt
-    startCommand: gunicorn --bind :10000 --timeout 120 app.main:app
+    startCommand: >
+      gunicorn --bind :10000 
+      --timeout 120 
+      --workers 4 
+      --worker-class gthread 
+      --threads 2 
+      --log-level=info 
+      --access-logfile - 
+      --error-logfile - 
+      app.main:app
