@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "magic-bg-remover"
+version = "0.1.0"
+description = "Background removal web application"
+authors = ["Your Name <your.email@example.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+Flask = "^2.3.3"
+Werkzeug = "^2.3.7"
+rembg = "^2.0.30"
+Pillow = "^9.5.0"
+numpy = "^1.24.3"
+onnxruntime = "^1.13.1"
+gunicorn = "^20.1.0"
+flask-cors = "^4.0.0"
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
